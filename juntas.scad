@@ -1,4 +1,5 @@
 use <hueco_baqueta.scad>
+use <utils/utils.scad>
 
 /* ============================================================
    VARIABLES GLOBALES
@@ -22,7 +23,13 @@ _medida_tornillo = 0.1875;      // pulgadas para UNC/UNF/whitworth; mm para metr
 _profundidad     = 20;     // grosor de material (profundidad_pieza en hueco_baqueta)
 _distancia       = 40;     // separacion entre baquetas en arrays / juntas dobles
 _cantidad        = 5;      // cantidad de elementos en arrays
+_cantidad_junta_angular        = 2; 
 
+_centrada        = false;
+_pasante         = false;
+_angulo           = 90;
+
+_cantidad_tornillos=2;
 
 /* ============================================================
    JUNTA DOBLE
@@ -232,6 +239,174 @@ module junta_array(
    cantidad_rama: tornillos en el brazo transversal
    ============================================================ */
 module junta_T(
+    ancho_baqueta      = 60,
+    desface_centro     = [0, 0, -5],
+    cantidad_main      = 2,
+    cantidad_rama      = 1,
+    profundidad_pieza  = _profundidad,
+    diametro           = _diametro,
+    holgura_a          = _holgura_a,
+    holgura_b          = _holgura_b,
+    poly_n             = _poly_n,
+    familia_tuerca     = _familia_tuerca,
+    subtipo_tuerca     = _subtipo_tuerca,
+    medida_tornillo    = _medida_tornillo
+) {
+    difference() {
+        hull() {
+            baqueta_solida(
+                ancho_baqueta   = ancho_baqueta,
+                diametro        = diametro,
+                holgura         = holgura_a,
+                poly_n          = poly_n,
+                familia_tuerca  = familia_tuerca,
+                subtipo_tuerca  = subtipo_tuerca,
+                medida_tornillo = medida_tornillo
+            );
+            translate([ancho_baqueta, 0, 0]) rotate([0, 90, 0])
+                baqueta_solida(
+                    ancho_baqueta   = ancho_baqueta,
+                    diametro        = diametro,
+                    holgura         = holgura_b,
+                    poly_n          = poly_n,
+                    familia_tuerca  = familia_tuerca,
+                    subtipo_tuerca  = subtipo_tuerca,
+                    medida_tornillo = medida_tornillo
+                );
+        }
+        hueco_baqueta(
+            cantidad_tornillos    = cantidad_main,
+            profundidad_pieza     = profundidad_pieza,
+            largo_hueco_principal = ancho_baqueta,
+            desface_centro        = desface_centro,
+            diametro              = diametro,
+            holgura               = holgura_a,
+            poly_n                = poly_n,
+            familia_tuerca        = familia_tuerca,
+            subtipo_tuerca        = subtipo_tuerca,
+            medida_tornillo       = medida_tornillo
+        );
+        translate([ancho_baqueta, 0, 0]) rotate([0, 90, 0])
+            hueco_baqueta(
+                cantidad_tornillos    = cantidad_rama,
+                profundidad_pieza     = profundidad_pieza,
+                largo_hueco_principal = ancho_baqueta,
+                diametro              = diametro,
+                holgura               = holgura_b,
+                poly_n                = poly_n,
+                familia_tuerca        = familia_tuerca,
+                subtipo_tuerca        = subtipo_tuerca,
+                medida_tornillo       = medida_tornillo
+            );
+    }
+}
+
+
+
+
+/* ============================================================
+   JUNTA Angulo
+   Dos baquetas perpendiculares; el segundo brazo gira 90 en Y.
+   cantidad_main: tornillos en el brazo principal
+   cantidad_rama: tornillos en el brazo transversal
+   ============================================================ */
+module junta_angulo(
+    ancho_baqueta      = 60,
+    desface_centro     = [0, 0, -5],
+    cantidad_main      = 2,
+    cantidad_tornillos      = _cantidad_tornillos,
+    profundidad_pieza  = _profundidad,
+    diametro           = _diametro,
+    holgura_a          = _holgura_a,
+    holgura_b          = _holgura_b,
+    poly_n             = _poly_n,
+    familia_tuerca     = _familia_tuerca,
+    subtipo_tuerca     = _subtipo_tuerca,
+    medida_tornillo    = _medida_tornillo,
+    centrada           = _centrada,
+    pasante            = _pasante,
+    cantidad           = _cantidad_junta_angular,
+    angulo_total             = _angulo
+
+
+) {
+    difference() {
+       
+        //translate([ 0,ancho_baqueta, 0])rotate([0, 0,angulo ])
+        //rotate_around(angulo, [0, 0,ancho_baqueta], [0,0, 0]){
+        c= cantidad- 1;
+        paso_ang= angulo_total / c;
+        
+        for(rot_y=[0:paso_ang:angulo_total])
+         hull() {
+        rotate([0, 0,rot_y ])
+        translate([ 0,ancho_baqueta, 0])rotate([0, 0,90 ])
+            baqueta_solida(
+                ancho_baqueta   = ancho_baqueta,
+                diametro        = diametro,
+                holgura         = holgura_a,
+                poly_n          = poly_n,
+                familia_tuerca  = familia_tuerca,
+                subtipo_tuerca  = subtipo_tuerca,
+                medida_tornillo = medida_tornillo
+            );
+            //}
+            translate([0, 0, 0]) rotate([0, 90, 0])
+            
+                baqueta_solida(
+                    ancho_baqueta   = ancho_baqueta,
+                    diametro        = diametro,
+                    holgura         = holgura_b,
+                    poly_n          = poly_n,
+                    familia_tuerca  = familia_tuerca,
+                    subtipo_tuerca  = subtipo_tuerca,
+                    medida_tornillo = medida_tornillo
+                );
+        }
+ for(rot_y=[0:paso_ang:angulo_total])
+        rotate([0, 0,rot_y ])
+        translate([ 0,ancho_baqueta, 0])rotate([0, 180,90])        hueco_baqueta(
+            cantidad_tornillos    = cantidad_main,
+            profundidad_pieza     = profundidad_pieza,
+            largo_hueco_principal = ancho_baqueta,
+            desface_centro        = desface_centro,
+            diametro              = diametro,
+            holgura               = holgura_a,
+            poly_n                = poly_n,
+            familia_tuerca        = familia_tuerca,
+            subtipo_tuerca        = subtipo_tuerca,
+            medida_tornillo       = medida_tornillo
+        );
+        translate([0, 0, 0]) rotate([0,90, 0])
+            hueco_baqueta(
+                profundidad_pieza     = profundidad_pieza,
+                largo_hueco_principal = ancho_baqueta,
+                diametro              = diametro,
+                holgura               = holgura_b,
+                poly_n                = poly_n,
+                familia_tuerca        = familia_tuerca,
+                subtipo_tuerca        = subtipo_tuerca,
+                medida_tornillo       = medida_tornillo,
+                cantidad_tornillos    = cantidad_tornillos,
+                angulo_tornillo        = angulo_total/2,
+                );
+                //profundidad_avellano // escribir module hueco_baqueta(
+
+   }
+    
+    //MEJORAR EL AVELLANADO ya que la profundidad 
+    //    cantidad_tornillos    = cantidad_tornillos,
+    //angulo_tornillo       = angulo_tornillo,
+}
+
+
+/* ============================================================
+   JUNTA Costilla
+   Dos baquetas perpendiculares; el segundo brazo gira 90 en Y.
+   cantidad_main: tornillos en el brazo principal
+   cantidad_rama: tornillos en el brazo transversal
+   ============================================================ */
+module junta_Costilla(
     ancho_baqueta      = 60,
     desface_centro     = [0, 0, -5],
     cantidad_main      = 2,
@@ -515,6 +690,16 @@ translate([100, -350, 0])
 translate([100, 100, 0])
     junta_T();
 
+    
+// Junta angulo
+translate([-100, 360, 0])
+    color([.75,0,.25])junta_angulo();
+    
+translate([100, 250, 0])
+    color([1,0,0])junta_Costilla();
+
+    
+    
 // Union lineal
 translate([300, 100, 0])
     union_lineal();
